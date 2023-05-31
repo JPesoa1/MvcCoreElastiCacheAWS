@@ -7,8 +7,8 @@ namespace MvcCoreElastiCacheAWS.Helpers
     {
 
 
-      
 
+        string a;
         
 
 
