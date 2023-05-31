@@ -11,11 +11,6 @@ namespace MvcCoreElastiCacheAWS.Helpers
 
         
 
-        public async Task OnGet()
-        {
-            await _cache.SetStringAsync("CacheTime", DateTime.UtcNow.ToString());
-        }
-
 
 
         private static Lazy<ConnectionMultiplexer> CreateConnection =
