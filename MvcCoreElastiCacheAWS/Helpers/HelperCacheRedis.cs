@@ -1,9 +1,23 @@
-﻿using StackExchange.Redis;
+﻿using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
 
 namespace MvcCoreElastiCacheAWS.Helpers
 {
     public class HelperCacheRedis
     {
+
+
+      
+
+        
+
+        public async Task OnGet()
+        {
+            await _cache.SetStringAsync("CacheTime", DateTime.UtcNow.ToString());
+        }
+
+
+
         private static Lazy<ConnectionMultiplexer> CreateConnection =
        new Lazy<ConnectionMultiplexer>(() =>
        {

@@ -1,4 +1,5 @@
-﻿using MvcCoreElastiCacheAWS.Models;
+﻿using Microsoft.Extensions.Caching.Distributed;
+using MvcCoreElastiCacheAWS.Models;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 
@@ -6,24 +7,30 @@ namespace MvcCoreElastiCacheAWS.Services
 {
     public class ServiceAWSCache
     {
-        private IDatabase cache;
+        //private IDatabase cache;
+        private readonly IDistributedCache cache;
 
-        public ServiceAWSCache()
+        public ServiceAWSCache(IDistributedCache cache)
         {
-            this.cache = Helpers.HelperCacheRedis.Connection.GetDatabase();
+            this.cache = cache;
+            
         }
+
+        
         public async Task<List<Coche>> GetCochesFavoritosAsync()
         {
             //SE SUPONE QUE PODRIAMOS TENER COCHES ALMACENADOS
             //MEDIANTE UNA KEY
             //ALMACENAREMOS LOS COCHES UTILIZANDO JSON Y EN UNA COLECCION
             string jsonCoches =
-                await this.cache.StringGetAsync("cochesfavoritos");
+               
+                await this.cache.GetStringAsync("cochesfavoritos");
             if (jsonCoches == null)
             {
                 return null;
             }
             else
+
             {
                 List<Coche> cars = JsonConvert.DeserializeObject<List<Coche>>
                     (jsonCoches);
@@ -46,8 +53,8 @@ namespace MvcCoreElastiCacheAWS.Services
             //SERIALIZAMOS A JSON
             string jsonCoches = JsonConvert.SerializeObject(coches);
             //ALMACENAMOS CON LA KEY DE REDIS
-            await this.cache.StringSetAsync
-                ("cochesfavoritos", jsonCoches, TimeSpan.FromMinutes(30));
+            await this.cache.SetStringAsync
+                ("cochesfavoritos", jsonCoches, new DistributedCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(1)));
         }
 
         public async Task DeleteCocheFavoritoAsync(int idcoche)
@@ -61,15 +68,16 @@ namespace MvcCoreElastiCacheAWS.Services
                 //COMPROBAMOS SI YA NO EXISTEN COCHES FAVORITOS
                 if (cars.Count == 0)
                 {
-                    await this.cache.KeyDeleteAsync("cochesfavoritos");
+                    await this.cache.RemoveAsync("cochesfavoritos");
                 }
                 else
                 {
+                    
                     //SERIALIZAMOS Y ALMACENAMOS LA COLECCION ACTUALIZADA
                     string jsonCoches =
                         JsonConvert.SerializeObject(cars);
-                    await this.cache.StringSetAsync("cochesfavoritos"
-                        , jsonCoches, TimeSpan.FromMinutes(30));
+                    await this.cache.SetStringAsync("cochesfavoritos"
+                        , jsonCoches,new DistributedCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(1)));
                 }
             }
         }
